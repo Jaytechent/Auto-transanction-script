@@ -1,0 +1,31 @@
+const puppeteer = require('puppeteer');
+
+const TRANSFER_URL = 'https://app.union.build/transfer?source=xion-testnet-2&destination=17000&asset=0x7578696f6e&receiver=0xd2283d3442508ad63f3afa7f4e874b7826907a0c&amount=0.0001';
+const TRANSFER_COUNT = 249;
+const BUTTON_SELECTOR = 'body > div:nth-child(1) > div.relative.min-h-\\[100svh\\].w-screen.z-0 > main > div.absolute.top-16.left-0.right-0.bottom-0.flex-1.z-0.overflow-scroll > div > div > div.grid.w-full.grow.overflow-hidden > div > div > div.p-4.flex.justify-between.gap-2.border-t.border-zinc-800.sticky.bottom-0.bg-zinc-925 > div > div > button';
+
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: false, // So you can sign the first transaction manually
+    defaultViewport: null,
+    args: ['--start-maximized'],
+  });
+
+  const page = await browser.newPage();
+  await page.goto(TRANSFER_URL, { waitUntil: 'networkidle2' });
+
+  console.log('🔐 Please connect your wallet and approve the first transaction.');
+  await page.waitForSelector(BUTTON_SELECTOR);
+
+  // Wait for user to sign the first transaction
+  await page.waitForTimeout(30000); // Wait 30 seconds or until you're done
+
+  for (let i = 1; i < TRANSFER_COUNT; i++) {
+    console.log(`🚀 Sending transfer #${i + 1} of ${TRANSFER_COUNT}`);
+    await page.click(BUTTON_SELECTOR);
+    await page.waitForTimeout(5000); // Wait for modal/wallet to pop
+  }
+
+  console.log('✅ Done sending all transactions!');
+  await browser.close();
+})();
